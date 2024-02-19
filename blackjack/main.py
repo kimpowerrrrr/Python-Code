@@ -14,69 +14,116 @@ import random
 
 cards = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
 
-comp_hand = []
-comp_score = 0
-comp_deal = False
+draw_card = False
 
-player_deal = False
-player_hand = []
-player_score = 0
 
-continue_game = True
-
-#deal cards
 def deal_cards(cards_needed):
-    #print(cards_needed)
     cards_dealt = []
+
     if cards_needed > 1:
-        while cards_needed > 0:
-            current_card = random.randrange(0, len(cards) - 1)
+        while cards_needed  > 0:
+            current_card = random.randrange(0 , len(cards) - 1)
             cards_dealt.append(cards[current_card])
-            #print(f"current card being dealt: {cards[current_card]}")
             cards_needed -= 1
-        
+
         return cards_dealt
     else:
-        current_card= random.randrange(0, len(cards) - 1)
+        current_card = random.randrange(0, len(cards) - 1)
         return cards[current_card]
 
-def get_score(card_hand):
-    current_score = 0
-    for value in card_hand:
-        current_score += value
+def calculate_score(cards_at_hand):
+    ace = False
+    tens = False
+    current_score = sum(cards_at_hand)
+
+    if len(cards_at_hand) == 2:
+        for value in cards_at_hand:
+            if value == 11:
+                ace = True
+            elif value == 10:
+                tens = True
+
+        if ace == True and tens == True:
+            current_score = 0
+            return current_score
+    else:
+        if current_score == 21:
+            return current_score
+        
+    if ace == True and current_score > 21:
+        index = cards_at_hand.index(11)
+        cards_at_hand[index] = 1
+        current_score = sum(cards_at_hand)    
+    
     return current_score
 
-def find_winner(comp_score, player_score):
-    if comp_score > player_score:
-        return "You lose!"
-    elif comp_score == player_score:
+def check_winner(player_score, computer_score):
+    player_score = int(player_score)
+    computer_score = int(computer_score)
+    if player_score == 0 or player_score > computer_score or (player_score <= 21 and computer_score > 21):
+        return "Player wins!"
+    elif computer_score == 0 or computer_score > player_score or (player_score > 21 and computer_score <= 21):
+        return "Computer wins!"
+    elif player_score == computer_score:
         return "Draw!"
-    else:
-        return "You win!"
-  
-#1st deal
-#deal first 2 cards to the player
-player_hand = deal_cards(cards_needed=2)
-player_score = get_score(player_hand) 
+    
+def start_game():  
+    continue_game_player = True
+    continue_game_computer = True 
+    
+    computer_cards = []
+    computer_score = 0
+    player_cards = []
+    player_score = 0  
 
-print(f"Your cards are: {player_hand}, your current score is: {player_score}")
+    #1st deal of cards
+    player_cards = deal_cards(cards_needed = 2)
+    computer_cards = deal_cards(cards_needed = 2)
 
-#deal first 2 cards to the computer
-comp_hand = deal_cards(cards_needed=2)
-print(f"Computer's first card: {comp_hand[0]}")
+    #calculate scores for 1st deal
+    player_score = calculate_score(player_cards)
+    computer_score = calculate_score(computer_cards)
 
-#ask player if will continue for another card
-while continue_game == True:
-    player_continue = str(input("Type 'y' to get another card, type 'n' to pass: "))
-    if player_continue.lower() == "y":
-        player_hand.append(deal_cards(cards_needed=1))
-        player_score = get_score(player_hand)
-        print(f"Your cards are: {player_hand}, your current score is: {player_score}")
-        continue_game = True
-    else:
-        continue_game = False
-        player_score = get_score(player_hand)
-        comp_score = get_score(comp_hand)
-        print(f"player score: {player_score}")
-        print(f"computer score: {comp_score}")
-        print(f"{find_winner(comp_score, player_score)}")
+    print(f"player cards: {player_cards}, score: {player_score}")
+    print(f"computer cards: [{computer_cards[0]}]")
+
+    if player_score == 0:
+        continue_game_player = False
+        continue_game_computer = False
+        print("Blackjack! Player wins!")
+        return
+    elif computer_score == 0:
+        continue_game_player = False
+        continue_game_computer = False
+        print("Blackjack! Computer wins!")
+        return
+
+    #draw cards for player
+    while continue_game_player == True:
+        draw_card_player = str(input("Type 'y' to draw another card, type 'n' to pass: "))
+        if draw_card_player.lower() == "y":
+            player_cards.append(deal_cards(cards_needed= 1))
+
+            #calculate scores
+            player_score = calculate_score(player_cards)
+            print(f"player cards: {player_cards}, score: {player_score}")
+            print(f"computer cards: {computer_cards[0]}")
+            continue_game_player = True
+
+        else:
+            continue_game_player = False
+            print(f"player cards: {player_cards}, score: {player_score}")
+
+    #draw cards for computer
+    while continue_game_computer == True:
+        if computer_score < 17:
+            computer_cards.append(deal_cards(cards_needed= 1))
+            computer_score = calculate_score(computer_cards)
+            continue_game_computer = True
+        else:
+            continue_game_computer = False
+
+    print(f"computer cards: {computer_cards}, score: {computer_score}")
+    print(f"{check_winner(player_score, computer_score)}")
+
+start_game()
